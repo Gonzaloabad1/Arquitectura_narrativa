@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller de Arquitectura Narrativa - LMS Interactivo 3D</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                            950: '#2e1065',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-950 text-slate-100 flex flex-col font-sans overflow-x-hidden selection:bg-purple-600 selection:text-white">
+
+    <!-- Header / Navegación Superior -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-400 flex items-center justify-center">
+                <!-- Icono Plumbob Verde Sim -->
+                <svg class="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L4 12l8 10 8-10L12 2z"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-lg font-extrabold bg-gradient-to-r from-white via-emerald-200 to-purple-400 bg-clip-text text-transparent">Taller de Arquitectura Narrativa</h1>
+                <p class="text-xs text-slate-400 hidden sm:block"> Estudio Narración &bull; Tutor Virtual & Mesa de Notas Manuscritas 3D</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4 sm:gap-6">
+            <div class="flex flex-col items-end">
+                <span id="progress-text" class="text-xs font-semibold text-emerald-400">Progreso: 0% (0/8 Módulos)</span>
+                <div class="w-32 sm:w-48 bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700/60 mt-1">
+                    <div id="progress-bar" class="bg-gradient-to-r from-emerald-400 via-purple-500 to-amber-400 h-full w-0 transition-all duration-500 shadow-sm shadow-emerald-500/50"></div>
+                </div>
+            </div>
+            <button onclick="resetAllProgress()" title="Reiniciar Progreso" class="p-2 hover:bg-slate-800 text-slate-400 hover:text-rose-400 rounded-xl transition border border-transparent hover:border-slate-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+            <button id="book-modal-btn" onclick="openBookModal()" title="Ver Libro Compilado" class="hidden p-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl transition flex items-center gap-2 text-xs font-bold animate-pulse">
+                <span>📖</span> <span class="hidden md:inline">Abrir Visor Digital</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Columna Izquierda: Escena 3D & Lista de Módulos -->
+        <aside class="lg:col-span-5 xl:col-span-4 flex flex-col gap-4">
+            
+            <!-- Visor 3D: El Estudio  del Autor -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl relative overflow-hidden flex flex-col items-center">
+                <div class="w-full flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300">Estudio  del Autor</h3>
+                    </div>
+                    <span id="status-3d" class="text-[10px] px-2.5 py-1 bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 rounded-full font-medium">Escritorio en Blanco</span>
+                </div>
+                
+                <!-- Canvas Three.js Centrado -->
+                <div id="canvas-container" class="w-full h-80 sm:h-96 bg-slate-950 rounded-xl overflow-hidden relative cursor-grab active:cursor-grabbing border border-slate-800/80 shadow-inner flex items-center justify-center">
+                    <div class="absolute bottom-2 left-2 z-10 text-[10px] text-slate-300 bg-slate-900/90 px-2.5 py-1 rounded-lg backdrop-blur border border-slate-800 flex items-center gap-1.5 shadow">
+                        <span>🎮</span> Clic en el libro para abrir/cerrar &bull; Arrastra para girar
+                    </div>
+                </div>
+                
+                <p id="author-state-desc" class="text-[11px] text-slate-400 mt-3 text-center leading-relaxed max-w-xs">
+                    Tu personaje 'Sim' observa la mesa mientras creas cada nota manuscrita.
+                </p>
+            </div>
+
+            <!-- Menú de Módulos -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 px-1">Módulos del Taller</h2>
+                <nav id="modules-list" class="flex flex-col gap-2">
+                    <!-- Renderizado por JS -->
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Columna Derecha: Contenido del Módulo Activo & Práctica de Escritura -->
+        <section class="lg:col-span-7 xl:col-span-8 flex flex-col gap-6">
+            <div id="module-content" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-2xl transition-all duration-300">
+                <!-- Inyectado dinámicamente por JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast de Notificaciones -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-2xl border border-emerald-400/30 transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <span id="toast-message" class="text-sm font-medium">Nota manuscrita desplegada en la mesa 3D</span>
+    </div>
+
+    <!-- Modal Digital Book Reader -->
+    <div id="book-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-amber-500/30 w-full max-w-4xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
+            <div class="bg-slate-950 px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📖</span>
+                    <div>
+                        <h3 id="book-title-header" class="text-base font-extrabold text-amber-200">Manuscrito Publicado — Edición Definitiva</h3>
+                        <p class="text-xs text-slate-400">Compilación de Notas del Taller</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="printBook()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 rounded-lg transition border border-slate-700 flex items-center gap-1.5">
+                        <span>🖨️</span> Imprimir / PDF
+                    </button>
+                    <button onclick="exportMarkdown()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 rounded-lg transition border border-slate-700 flex items-center gap-1.5">
+                        <span>📝</span> Exportar Markdown
+                    </button>
+                    <button onclick="closeBookModal()" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 sm:p-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950 text-slate-200" id="book-pages-container">
+            </div>
+
+            <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
+                <button onclick="turnPage(-1)" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-800 transition text-amber-300 font-semibold">
+                    ← Página Anterior
+                </button>
+                <span id="page-indicator">Página 1 de 8</span>
+                <button onclick="turnPage(1)" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-800 transition text-amber-300 font-semibold">
+                    Página Siguiente →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modulesData = [
+            {
+                id: 1,
+                title: "1. La Idea y el Concepto Inicial",
+                subtitle: "Semilla, Premisa, '¿Qué pasaría si...?' y Tono",
+                pillHeader: "Píldora de Maestro: La chispa de Stephen King y García Márquez",
+                theoryText: `
+                    <p class="mb-3">Toda gran historia nace con una pregunta disparadora: <strong>"¿Qué pasaría si...?"</strong>. Para transformar la chispa inicial en una novela firme, debes articularla en una <strong>Premisa dramática</strong>.</p>
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-emerald-900/40 text-xs font-mono text-emerald-200 mb-3">
+                        [PROTAGONISTA] + [INCIDENTE INICIAL] + [META ACCIONABLE] + [CONFLICTO/GRAN OBSTÁCULO]
+                    </div>
+                `,
+                examplesText: `
+                    <ul class="space-y-3 text-xs">
+                        <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                            <strong class="text-emerald-300 block mb-1">Stephen King — <em>El resplandor</em>:</strong>
+                            <p class="text-slate-300">¿Qué pasaría si un escritor alcohólico acepta cuidar un hotel aislado durante el invierno sin saber que el lugar alimenta sus demonios internos?</p>
+                        </li>
+                    </ul>
+                `,
+                guideText: `
+                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
+                        <li>Escribe tu premisa en no más de 50 palabras.</li>
+                        <li>Define el género literario y la atmósfera general.</li>
+                    </ol>
+                `,
+                type: "input",
+                actionLabel: "Guardar Nota Manuscrita #1",
+                placeholder: "Ej: Un relojero descubre que los minutos que repara son robados de las vidas de sus clientes..."
+            },
+            {
+                id: 2,
+                title: "2. Investigación y Contexto",
+                subtitle: "Verosimilitud y Documentación de Campo",
+                pillHeader: "Píldora de Maestro: El rigor de Umberto Eco y Agatha Christie",
+                theoryText: `
+                    <p class="mb-3">La credibilidad de una historia radica en el rigor de sus detalles técnicos y de ambientación.</p>
+                `,
+                examplesText: `
+                    <ul class="space-y-3 text-xs">
+                        <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                            <strong class="text-emerald-300 block mb-1">Umberto Eco — <em>El nombre de la rosa</em>:</strong>
+                            <p class="text-slate-300">Midiendo pasos y planos exactos de la abadía medieval para garantizar coherencia espacial.</p>
+                        </li>
+                    </ul>
+                `,
+                guideText: `
+                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
+                        <li>Anota los tres temas clave de contexto que requiere tu historia.</li>
+                    </ol>
+                `,
+                type: "input",
+                actionLabel: "Guardar Nota Manuscrita #2",
+                placeholder: "Ej: Consultar normativas de investigación forense y venenos de época..."
+            },
+            {
+                id: 3,
+                title: "3. Creación de Personajes",
+                subtitle: "Deseo vs. Necesidad y Defecto Fatal",
+                pillHeader: "Píldora de Maestro: J.K. Rowling y Gillian Flynn",
+                theoryText: `
+                    <p class="mb-3">Un personaje cobra vida en la tensión entre su <strong>Deseo Externo (Want)</strong> y su <strong>Necesidad Interna (Need)</strong>.</p>
+                `,
+                examplesText: `
+                    <ul class="space-y-3 text-xs">
+                        <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                            <strong class="text-emerald-300 block mb-1">Gillian Flynn — <em>Perdida</em>:</strong>
+                            <p class="text-slate-300">Creación de máscaras sociales complejas que esconden motivaciones maquiavélicas.</p>
+                        </li>
+                    </ul>
+                `,
+                guideText: `
+                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
+                        <li>Diseña el Want y Need de tu protagonista.</li>
+                    </ol>
+                `,
+                type: "input",
+                actionLabel: "Guardar Nota Manuscrita #3",
+                placeholder: "Ej: Elena (Bióloga): Desea descubrir la cura, pero necesita perdonarse su error pasado..."
+            },
+            {
+                id: 4,
+                title: "4. La Estructura y la Escaleta",
+                subtitle: "Estructura en 3 Actos y Puntos de Giro",
+                pillHeader: "Píldora de Maestro: El método de Brandon Sanderson",
+                theoryText: `
+                    <p class="mb-3">Planifica el ritmo: Planteamiento (25%), Nudo y Confrontación (50%) y Desenlace (25%).</p>
+                `,
+                examplesText: `
+                    <ul class="space-y-3 text-xs">
+                        <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                            <strong class="text-emerald-300 block mb-1">Brandon Sanderson:</strong>
+                            <p class="text-slate-300">Diseña las promesas iniciales para que el clímax sea una revelación inolvidable.</p>
+                        </li>
+                    </ul>
+                `,
+                guideText: `
+                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
+                        <li>Detalla los 3 puntos de giro clave.</li>
+                    </ol>
+                `,
+                type: "input",
+                actionLabel: "Guardar Nota Manuscrita #4",
+                placeholder: "Ej: Acto 1: Robo en la galería. Acto 2: Traición del socio. Acto 3: Juicio..."
+            },
+            {
+                id: 5,
+                title: "5. La Escritura del Borrador",
+                subtitle: "Silenciar al Crítico Interno y la Teoría del Iceberg",
+                pillHeader: "Píldora de Maestro: Hemingway y King",
+                theoryText: `
+                    <p class="mb-3">Avanza en el primer borrador sin corregir sobre la marcha. Escribe con la puerta cerrada.</p>
+                `,
+                examplesText: `
+                    <ul class="space-y-3 text-xs">
+                        <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                            <strong class="text-emerald-300 block mb-1">Ernest Hemingway:</strong>
+                            <p class="text-slate-300">El subtexto que se intuye da fuerza a la prosa.</p>
+                        </li>
+                    </ul>
+                `,
+                guideText: `
+                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
+                        <li>Fija una meta diaria de palabras.</li>
+                    </ol>
+                `,
+                type: "input",
+                actionLabel: "Guardar Nota Manuscrita #5",
+                placeholder: "Ej: Meta diaria: 800 palabras. Avance actual del capítulo 1 y 2..."
+            },
+            {
+                id: 6,
+                title: "6. Primera Revisión y Edición",
+                subtitle: "Edición de Desarrollo y Pulido de Estilo",
+                pillHeader: "Píldora de Maestro: Raymond Carver y la tijera de edición",
+                theoryText: `
+                    <p class="mb-3">Deja descansar el texto unas semanas y luego elimina todo lo superfluo.</p>
+                `,
+                examplesText: `
+                    <ul class="space-y-3 text-xs">
+                        <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                            <strong class="text-emerald-300 block mb-1">Raymond Carver:</strong>
+                            <p class="text-slate-300">Recortar hasta el 50% para lograr una brevedad potente.</p>
+                        </li>
+                    </ul>
+                `,
+                guideText: `
+                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
+                        <li>Lee diálogos en voz alta.</li>
+                    </ol>
+                `,
+                type: "input",
+                actionLabel: "Guardar Nota Manuscrita #6",
+                placeholder: "Ej: Eliminados adjetivos innecesarios y pulida la escena del interrogatorio..."
+            },
+            {
+                id: 7,
+                title: "7. Lectores Cero y Corrección",
+                subtitle: "Feedback Estructurado y Pulido Profesional",
+                pillHeader: "Píldora de Maestro: Cuestionarios objetivos para lectores beta",
+                theoryText: `
+                    <p class="mb-3">Recoge opiniones sinceras para detectar baches de ritmo.</p>
+                `,
+                examplesText: `
+                    <ul class="space-y-3 text-xs">
+                        <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                            <strong class="text-emerald-300 block mb-1">Lectores Beta:</strong>
+                            <p class="text-slate-300">Preguntas sobre tensión y coherencia de personajes.</p>
+                        </li>
+                    </ul>
+                `,
+                guideText: `
+                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
+                        <li>Envía la obra a 3 lectores de confianza.</li>
+                    </ol>
+                `,
+                type: "input",
+                actionLabel: "Guardar Nota Manuscrita #7",
+                placeholder: "Ej: Feedback recibido: Acelerar el inicio del capítulo 4..."
+            },
+            {
+                id: 8,
+                title: "8. Publicación o Difusión",
+                subtitle: "Edición Tradicional o Autoedición",
+                pillHeader: "Píldora de Maestro: Lanzamiento e impacto",
+                theoryText: `
+                    <p class="mb-3">Prepara tu propuesta editorial o estrategia de autoedición digital.</p>
+                `,
+                examplesText: `
+                    <ul class="space-y-3 text-xs">
+                        <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                            <strong class="text-emerald-300 block mb-1">Estrategias:</strong>
+                            <p class="text-slate-300">Definir el gancho y sinopsis comercial.</p>
+                        </li>
+                    </ul>
+                `,
+                guideText: `
+                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
+                        <li>Diseña tu pitch de 1 línea.</li>
+                    </ol>
+                `,
+                type: "input",
+                actionLabel: "Guardar Nota Manuscrita #8",
+                placeholder: "Ej: Sinopsis lista. Preparada propuesta para editoriales..."
+            }
+        ];
+
+        let currentModuleIndex = 0;
+        let userProgress = JSON.parse(localStorage.getItem('lms_sims_progress')) || {};
+        let currentBookPage = 0;
+
+        // Variables de Three.js & Personaje Sims
+        let scene, camera, renderer, container;
+        let simsCharacterGroup, plumbobMesh, deskGroup;
+        let noteMeshes = [], noteTextures = [];
+        let final3DBookGroup, bookCoverMesh, bookPagesInternalGroup;
+        let isBookOpen3D = false;
+        let current3DBookPageIndex = 0;
+        
+        let leftPageCanvasObj, rightPageCanvasObj;
+        let raycaster, mouseVector;
+
+        let targetCamPos = { x: 0, y: 3.2, z: 4.2 };
+        let targetCamLookAt = { x: 0, y: 0.5, z: 0 };
+        let currentCamLookAt = { x: 0, y: 0.5, z: 0 };
+
+        let simsPos = { x: -0.7, z: 0.8 };
+        let targetSimsPos = { x: -0.7, z: 0.8 };
+        let isSimsWalking = false;
+
+        let isDragging = false, dragDistance = 0, previousMousePosition = { x: 0, y: 0 };
+
+        function createPageCanvasTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1536; // Alta resolución mejorada
+            canvas.height = 2048;
+            const ctx = canvas.getContext('2d');
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.generateMipmaps = false;
+            return { canvas, texture, ctx };
+        }
+
+        function update3DPageTextures() {
+            if (!leftPageCanvasObj || !rightPageCanvasObj) return;
+            renderTextOnPageCanvas(leftPageCanvasObj.ctx, current3DBookPageIndex);
+            leftPageCanvasObj.texture.needsUpdate = true;
+
+            renderTextOnPageCanvas(rightPageCanvasObj.ctx, current3DBookPageIndex + 1);
+            rightPageCanvasObj.texture.needsUpdate = true;
+        }
+
+        function renderTextOnPageCanvas(ctx, modIdx) {
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#fffdf0';
+            ctx.fillRect(0, 0, 1536, 2048);
+
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 16;
+            ctx.strokeRect(40, 40, 1456, 1968);
+            ctx.strokeStyle = '#b45309';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(64, 64, 1408, 1920);
+
+            if (modIdx >= 0 && modIdx < modulesData.length) {
+                const mod = modulesData[modIdx];
+                const note = userProgress['note_' + mod.id] || "Sin nota manuscrita registrada en este módulo.";
+
+                ctx.fillStyle = '#78350f';
+                ctx.font = 'bold 72px serif';
+                ctx.fillText(`MÓDULO ${mod.id}`, 110, 180);
+
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'bold 56px sans-serif';
+                ctx.fillText(mod.title.substring(0, 36), 110, 275);
+
+                ctx.strokeStyle = '#d97706';
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                ctx.moveTo(110, 320);
+                ctx.lineTo(1426, 320);
+                ctx.stroke();
+
+                ctx.fillStyle = '#b45309';
+                ctx.font = 'italic 48px Georgia, serif';
+                ctx.fillText("Nota Manuscrita del Autor:", 110, 420);
+
+                ctx.fillStyle = '#1e293b';
+                ctx.font = '42px Georgia, serif'; // Letra grande y perfectamente legible
+                const words = note.split(' ');
+                let line = '';
+                let y = 520;
+                const maxWidth = 1300;
+
+                for (let n = 0; n < words.length; n++) {
+                    const testLine = line + words[n] + ' ';
+                    if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+                        ctx.fillText(line, 110, y);
+                        line = words[n] + ' ';
+                        y += 68;
+                        if (y > 1800) break;
+                    } else {
+                        line = testLine;
+                    }
+                }
+                ctx.fillText(line, 110, y);
+
+                ctx.fillStyle = '#b45309';
+                ctx.font = 'bold 40px sans-serif';
+                ctx.fillText(`Página ${modIdx + 1} de ${modulesData.length}`, 620, 1940);
+            } else {
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#78350f';
+                ctx.font = 'bold 72px serif';
+                ctx.fillText("FIN DEL MANUSCRITO", 768, 920);
+                ctx.font = 'italic 48px serif';
+                ctx.fillText("¡Enhorabuena por completar tu obra!", 768, 1030);
+            }
+        }
+
+        // Crear Personaje 'Sim' 3D con Diamante Plumbob Verde
+        function createSimsCharacter() {
+            simsCharacterGroup = new THREE.Group();
+
+            const plumbobGeo = new THREE.OctahedronGeometry(0.12, 0);
+            const plumbobMat = new THREE.MeshStandardMaterial({ 
+                color: 0x22c55e, 
+                emissive: 0x15803d, 
+                roughness: 0.2, 
+                metalness: 0.8 
+            });
+            plumbobMesh = new THREE.Mesh(plumbobGeo, plumbobMat);
+            plumbobMesh.position.y = 1.35;
+            simsCharacterGroup.add(plumbobMesh);
+
+            const headGeo = new THREE.SphereGeometry(0.14, 16, 16);
+            const headMat = new THREE.MeshStandardMaterial({ color: 0xfdba74, roughness: 0.6 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = 0.95;
+            head.castShadow = true;
+            simsCharacterGroup.add(head);
+
+            const hairGeo = new THREE.SphereGeometry(0.15, 12, 12, 0, Math.PI * 2, 0, Math.PI * 0.5);
+            const hairMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 });
+            const hair = new THREE.Mesh(hairGeo, hairMat);
+            hair.position.y = 0.98;
+            simsCharacterGroup.add(hair);
+
+            const torsoGeo = new THREE.CylinderGeometry(0.15, 0.18, 0.45, 12);
+            const torsoMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.5 });
+            const torso = new THREE.Mesh(torsoGeo, torsoMat);
+            torso.position.y = 0.6;
+            torso.castShadow = true;
+            simsCharacterGroup.add(torso);
+
+            const legsGeo = new THREE.CylinderGeometry(0.16, 0.14, 0.4, 12);
+            const legsMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.6 });
+            const legs = new THREE.Mesh(legsGeo, legsMat);
+            legs.position.y = 0.2;
+            legs.castShadow = true;
+            simsCharacterGroup.add(legs);
+
+            simsCharacterGroup.position.set(simsPos.x, 0, simsPos.z);
+            scene.add(simsCharacterGroup);
+        }
+
+        // Crear Notas Manuscritas Individuales en la Mesa
+        function createDeskNoteMeshes() {
+            noteMeshes.forEach(mesh => deskGroup.remove(mesh));
+            noteMeshes = [];
+            noteTextures = [];
+
+            const positions = [
+                [-0.6, 0.85, -0.2], [-0.3, 0.85, -0.3], [0, 0.85, -0.25],
+                [0.3, 0.85, -0.3], [0.6, 0.85, -0.2], [-0.4, 0.85, 0.2],
+                [0, 0.85, 0.25], [0.4, 0.85, 0.2]
+            ];
+
+            modulesData.forEach((mod, idx) => {
+                const noteCanvas = document.createElement('canvas');
+                noteCanvas.width = 512;
+                noteCanvas.height = 640;
+                const ctx = noteCanvas.getContext('2d');
+                
+                drawIndividualNoteOnCanvas(ctx, mod);
+
+                const noteTex = new THREE.CanvasTexture(noteCanvas);
+                noteTex.minFilter = THREE.LinearFilter;
+                noteTex.magFilter = THREE.LinearFilter;
+                noteTextures.push({ tex: noteTex, ctx: ctx, canvas: noteCanvas, modId: mod.id });
+
+                const noteGeo = new THREE.BoxGeometry(0.32, 0.005, 0.4);
+                const noteMat = new THREE.MeshStandardMaterial({ map: noteTex, roughness: 0.8 });
+                const noteMesh = new THREE.Mesh(noteGeo, noteMat);
+                
+                const pos = positions[idx];
+                noteMesh.position.set(pos[0], pos[1], pos[2]);
+                noteMesh.rotation.y = (Math.random() - 0.5) * 0.3;
+                noteMesh.visible = !!userProgress[mod.id];
+                
+                deskGroup.add(noteMesh);
+                noteMeshes.push(noteMesh);
+            });
+        }
+
+        function drawIndividualNoteOnCanvas(ctx, mod) {
+            ctx.fillStyle = '#fef3c7';
+            ctx.fillRect(0, 0, 512, 640);
+
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(16, 16, 480, 608);
+
+            ctx.fillStyle = '#78350f';
+            ctx.font = 'bold 30px sans-serif';
+            ctx.fillText(mod.title.substring(0, 24), 35, 65);
+
+            ctx.strokeStyle = '#b45309';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(35, 85);
+            ctx.lineTo(475, 85);
+            ctx.stroke();
+
+            const userText = userProgress['note_' + mod.id];
+            const noteText = (userText && userText.trim().length > 0) ? userText : "(Comienza a escribir en el módulo...)";
+            
+            ctx.fillStyle = (userText && userText.trim().length > 0) ? '#0f172a' : '#64748b';
+            ctx.font = 'bold 26px Georgia, serif';
+
+            const words = noteText.split(' ');
+            let line = '';
+            let y = 140;
+            const maxWidth = 430;
+
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+                    ctx.fillText(line, 35, y);
+                    line = words[n] + ' ';
+                    y += 40;
+                    if (y > 560) break;
+                } else {
+                    line = testLine;
+                }
+            }
+            ctx.fillText(line, 35, y);
+        }
+
+        function updateSingleNoteTexture(modId) {
+            const found = noteTextures.find(t => t.modId === modId);
+            if (found) {
+                const mod = modulesData.find(m => m.id === modId);
+                drawIndividualNoteOnCanvas(found.ctx, mod);
+                found.tex.needsUpdate = true;
+            }
+        }
+
+        // Generar Textura Realista de Portada de Libro
+        function createBookCoverTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1360;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#111827';
+            ctx.fillRect(0, 0, 1024, 1360);
+
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 14;
+            ctx.strokeRect(40, 40, 944, 1280);
+            ctx.lineWidth = 4;
+            ctx.strokeRect(60, 60, 904, 1240);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 64px serif';
+            ctx.textAlign = 'center';
+            ctx.fillText("ARQUITECTURA", 512, 160);
+            ctx.fillText("NARRATIVA", 512, 235);
+
+            ctx.fillStyle = '#1f2937';
+            ctx.fillRect(130, 290, 764, 560);
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 8;
+            ctx.strokeRect(130, 290, 764, 560);
+
+            ctx.fillStyle = '#7c2d12';
+            ctx.fillRect(150, 310, 724, 520);
+            ctx.fillStyle = '#b45309';
+            ctx.beginPath();
+            ctx.moveTo(150, 830);
+            ctx.lineTo(512, 500);
+            ctx.lineTo(874, 830);
+            ctx.fill();
+            ctx.fillStyle = '#fde68a';
+            ctx.font = 'bold 36px serif';
+            ctx.fillText("★ EL MANUSCRITO ★", 512, 580);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 52px serif';
+            ctx.fillText("Autor del Taller", 512, 1020);
+
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = 'bold 28px monospace';
+            ctx.fillText("EDICIÓN DEFINITIVA DE ESTUDIO", 512, 1190);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            return texture;
+        }
+
+        // Crear Modelo 3D del Libro con Tapa Dura, Páginas y Lomo
+        function create3DHardcoverBook() {
+            final3DBookGroup = new THREE.Group();
+            final3DBookGroup.position.set(0, 0.86, 0.05);
+
+            const coverMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.3, metalness: 0.2 });
+            const coverTex = createBookCoverTexture();
+            const frontCoverMat = new THREE.MeshStandardMaterial({ map: coverTex, roughness: 0.4 });
+
+            const coverGeo = new THREE.BoxGeometry(0.75, 0.03, 1.05);
+            bookCoverMesh = new THREE.Mesh(coverGeo, [coverMat, coverMat, frontCoverMat, coverMat, coverMat, coverMat]);
+            bookCoverMesh.position.set(0.38, 0.015, 0);
+
+            const bookBaseGroup = new THREE.Group();
+            
+            const bottomCover = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.02, 1.05), coverMat);
+            bottomCover.position.set(0.38, 0, 0);
+            const spineMesh = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 1.05), coverMat);
+            spineMesh.position.set(-0.02, 0.01, 0);
+
+            bookBaseGroup.add(bottomCover);
+            bookBaseGroup.add(spineMesh);
+            bookBaseGroup.add(bookCoverMesh);
+
+            leftPageCanvasObj = createPageCanvasTexture();
+            rightPageCanvasObj = createPageCanvasTexture();
+
+            const leftMat = new THREE.MeshStandardMaterial({ map: leftPageCanvasObj.texture, roughness: 0.7 });
+            const rightMat = new THREE.MeshStandardMaterial({ map: rightPageCanvasObj.texture, roughness: 0.7 });
+
+            const leftPageMesh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.025, 1.0), leftMat);
+            leftPageMesh.position.set(0.02, 0.02, 0);
+
+            const rightPageMesh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.025, 1.0), rightMat);
+            rightPageMesh.position.set(0.74, 0.02, 0);
+
+            bookPagesInternalGroup = new THREE.Group();
+            bookPagesInternalGroup.add(leftPageMesh);
+            bookPagesInternalGroup.add(rightPageMesh);
+            bookPagesInternalGroup.position.set(-0.35, 0, 0);
+            bookPagesInternalGroup.visible = false;
+
+            final3DBookGroup.add(bookBaseGroup);
+            final3DBookGroup.add(bookPagesInternalGroup);
+
+            final3DBookGroup.visible = false;
+            deskGroup.add(final3DBookGroup);
+        }
+
+        function toggle3DBookOpen() {
+            isBookOpen3D = !isBookOpen3D;
+            if (isBookOpen3D) {
+                current3DBookPageIndex = 0; // Iniciar en la primera página al abrir
+                targetCamPos = { x: 0, y: 1.85, z: 1.25 };
+                targetCamLookAt = { x: 0, y: 0.9, z: 0.1 };
+
+                bookPagesInternalGroup.visible = true;
+                update3DPageTextures();
+                showToast("Libro abierto: mostrando páginas manuscritas");
+            } else {
+                targetCamPos = { x: 0, y: 3.2, z: 4.2 };
+                targetCamLookAt = { x: 0, y: 0.5, z: 0 };
+
+                bookPagesInternalGroup.visible = false;
+                showToast("Libro cerrado: mostrando portada");
+            }
+        }
+
+        function flip3DPage(delta) {
+            const newIndex = current3DBookPageIndex + (delta * 2);
+            // Si pasamos de la última página, cerrar automáticamente el libro y mostrar portada
+            if (newIndex >= modulesData.length) {
+                isBookOpen3D = false;
+                targetCamPos = { x: 0, y: 3.2, z: 4.2 };
+                targetCamLookAt = { x: 0, y: 0.5, z: 0 };
+                bookPagesInternalGroup.visible = false;
+                showToast("Fin del libro: libro cerrado y portada mostrada");
+                return;
+            }
+            if (newIndex >= 0) {
+                current3DBookPageIndex = newIndex;
+                update3DPageTextures();
+            }
+        }
+
+        function init3D() {
+            container = document.getElementById('canvas-container');
+            if (!container) return;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x020617);
+
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(targetCamPos.x, targetCamPos.y, targetCamPos.z);
+            camera.lookAt(currentCamLookAt.x, currentCamLookAt.y, currentCamLookAt.z);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            raycaster = new THREE.Raycaster();
+            mouseVector = new THREE.Vector2();
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+            scene.add(ambientLight);
+
+            const deskLight = new THREE.PointLight(0xf59e0b, 1.6, 7);
+            deskLight.position.set(0, 2.0, 0.3);
+            scene.add(deskLight);
+
+            // Suelo
+            const floorGeo = new THREE.PlaneGeometry(8, 8);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
+            const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+            floorMesh.rotation.x = -Math.PI / 2;
+            scene.add(floorMesh);
+
+            // Mesa de Trabajo
+            deskGroup = new THREE.Group();
+            const deskTopGeo = new THREE.BoxGeometry(2.2, 0.08, 1.2);
+            const deskMat = new THREE.MeshStandardMaterial({ color: 0x331e11, roughness: 0.4 });
+            const deskTopMesh = new THREE.Mesh(deskTopGeo, deskMat);
+            deskTopMesh.position.y = 0.8;
+            deskTopMesh.castShadow = true;
+            deskGroup.add(deskTopMesh);
+
+            const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8);
+            [[-1, 0.4, -0.5], [1, 0.4, -0.5], [-1, 0.4, 0.5], [1, 0.4, 0.5]].forEach(pos => {
+                const leg = new THREE.Mesh(legGeo, deskMat);
+                leg.position.set(...pos);
+                deskGroup.add(leg);
+            });
+            scene.add(deskGroup);
+
+            createSimsCharacter();
+            createDeskNoteMeshes();
+            create3DHardcoverBook();
+
+            // Interacción de rotación y clic en libro
+            container.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                dragDistance = 0;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaX = e.clientX - previousMousePosition.x;
+                    dragDistance += Math.abs(deltaX);
+                    scene.rotation.y += deltaX * 0.005;
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                }
+            });
+
+            container.addEventListener('mouseup', (e) => {
+                isDragging = false;
+                if (dragDistance < 5 && final3DBookGroup && final3DBookGroup.visible) {
+                    const rect = container.getBoundingClientRect();
+                    mouseVector.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
+                    mouseVector.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
+
+                    raycaster.setFromCamera(mouseVector, camera);
+                    const intersects = raycaster.intersectObject(final3DBookGroup, true);
+                    if (intersects.length > 0) {
+                        const hitPoint = intersects[0].point;
+                        if (!isBookOpen3D) {
+                            toggle3DBookOpen();
+                        } else {
+                            if (hitPoint.x > 0.1) {
+                                flip3DPage(1);
+                            } else if (hitPoint.x < -0.1) {
+                                flip3DPage(-1);
+                            } else {
+                                toggle3DBookOpen();
+                            }
+                        }
+                    }
+                }
+            });
+
+            update3DWorkspace();
+            animate3D();
+
+            window.addEventListener('resize', () => {
+                if (!container) return;
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        function update3DWorkspace() {
+            if (!deskGroup) return;
+            const completedCount = Object.keys(userProgress).filter(k => !k.startsWith('note_') && userProgress[k]).length;
+
+            noteMeshes.forEach((mesh, idx) => {
+                mesh.visible = !!userProgress[modulesData[idx].id];
+                updateSingleNoteTexture(modulesData[idx].id);
+            });
+
+            if (completedCount === modulesData.length) {
+                noteMeshes.forEach(mesh => mesh.visible = false);
+                if (final3DBookGroup) {
+                    final3DBookGroup.visible = true;
+                }
+                document.getElementById('status-3d').innerText = "📖 ¡Libro Creado en la Mesa! Clic para Abrir/Cerrar";
+                document.getElementById('author-state-desc').innerText = "¡Tus notas manuscritas forman ahora el libro publicado! Haz clic en el libro 3D para acercar la imagen y abrir sus páginas.";
+                document.getElementById('book-modal-btn').classList.remove('hidden');
+            } else {
+                if (final3DBookGroup) {
+                    final3DBookGroup.visible = false;
+                    isBookOpen3D = false;
+                    targetCamPos = { x: 0, y: 3.2, z: 4.2 };
+                    targetCamLookAt = { x: 0, y: 0.5, z: 0 };
+                    if (bookPagesInternalGroup) bookPagesInternalGroup.visible = false;
+                }
+                document.getElementById('book-modal-btn').classList.add('hidden');
+                document.getElementById('status-3d').innerText = `Notas Manuscritas (${completedCount}/8)`;
+                document.getElementById('author-state-desc').innerText = "Tu personaje Sim camina y escribe en el escritorio conforme completas cada módulo.";
+            }
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+
+            camera.position.x += (targetCamPos.x - camera.position.x) * 0.08;
+            camera.position.y += (targetCamPos.y - camera.position.y) * 0.08;
+            camera.position.z += (targetCamPos.z - camera.position.z) * 0.08;
+
+            currentCamLookAt.x += (targetCamLookAt.x - currentCamLookAt.x) * 0.08;
+            currentCamLookAt.y += (targetCamLookAt.y - currentCamLookAt.y) * 0.08;
+            currentCamLookAt.z += (targetCamLookAt.z - currentCamLookAt.z) * 0.08;
+            camera.lookAt(currentCamLookAt.x, currentCamLookAt.y, currentCamLookAt.z);
+
+            if (plumbobMesh) {
+                plumbobMesh.rotation.y += 0.03;
+                plumbobMesh.position.y = 1.35 + Math.sin(Date.now() * 0.004) * 0.05;
+            }
+
+            if (isSimsWalking && simsCharacterGroup) {
+                const dx = targetSimsPos.x - simsCharacterGroup.position.x;
+                const dz = targetSimsPos.z - simsCharacterGroup.position.z;
+                const dist = Math.sqrt(dx * dx + dz * dz);
+
+                if (dist > 0.05) {
+                    simsCharacterGroup.position.x += (dx / dist) * 0.03;
+                    simsCharacterGroup.position.z += (dz / dist) * 0.03;
+                    simsCharacterGroup.rotation.y = Math.atan2(dx, dz);
+                    simsCharacterGroup.position.y = Math.abs(Math.sin(Date.now() * 0.012)) * 0.05;
+                } else {
+                    isSimsWalking = false;
+                    simsCharacterGroup.position.y = 0;
+                }
+            } else if (simsCharacterGroup) {
+                simsCharacterGroup.position.y = Math.sin(Date.now() * 0.003) * 0.01;
+            }
+
+            const targetCoverRotation = isBookOpen3D ? -Math.PI * 0.85 : 0;
+            if (bookCoverMesh) {
+                bookCoverMesh.rotation.y += (targetCoverRotation - bookCoverMesh.rotation.y) * 0.1;
+            }
+
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        function renderModulesList() {
+            const listContainer = document.getElementById('modules-list');
+            if (!listContainer) return;
+            listContainer.innerHTML = "";
+
+            modulesData.forEach((mod, index) => {
+                const isCompleted = userProgress[mod.id] || false;
+                const isActive = currentModuleIndex === index;
+
+                const btn = document.createElement('button');
+                btn.className = `w-full flex items-center justify-between p-3 rounded-xl text-left transition-all border ${
+                    isActive ? 'bg-amber-950/80 border-amber-500 text-white shadow-lg shadow-amber-900/30' : 'bg-slate-950/60 border-slate-800/80 text-slate-400 hover:bg-slate-800/60'
+                }`;
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isCompleted ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}">
+                            ${isCompleted ? '✓' : mod.id}
+                        </span>
+                        <div>
+                            <p class="text-xs font-semibold ${isActive ? 'text-amber-200' : 'text-slate-200'}">${mod.title}</p>
+                        </div>
+                    </div>
+                `;
+                btn.onclick = () => {
+                    currentModuleIndex = index;
+                    targetSimsPos = { x: (Math.random() - 0.5) * 1.2, z: 0.8 + Math.random() * 0.4 };
+                    isSimsWalking = true;
+
+                    renderModulesList();
+                    renderModuleContent();
+                };
+                listContainer.appendChild(btn);
+            });
+
+            updateProgress();
+        }
+
+        function renderModuleContent() {
+            const mod = modulesData[currentModuleIndex];
+            const isCompleted = userProgress[mod.id] || false;
+            const contentContainer = document.getElementById('module-content');
+            if (!contentContainer) return;
+
+            contentContainer.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-4 border-b border-slate-800">
+                        <div>
+                            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Módulo ${mod.id} de 8</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-white mt-0.5">${mod.title}</h2>
+                            <p class="text-xs text-slate-400">${mod.subtitle}</p>
+                        </div>
+                        <span class="px-3 py-1 text-xs rounded-full font-semibold border ${isCompleted ? 'bg-amber-950/80 text-amber-300 border-amber-800' : 'bg-amber-950/80 text-amber-300 border-amber-800'}">
+                            ${isCompleted ? '✓ Nota Creada' : '⚡ En curso'}
+                        </span>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-900/40 rounded-2xl p-4 sm:p-5">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-amber-300 mb-2 flex items-center gap-2">
+                            <span>🧠</span> ${mod.pillHeader}
+                        </h3>
+                        <div class="text-xs text-slate-300 leading-relaxed space-y-2">
+                            ${mod.theoryText}
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Ejemplo de Maestro</h4>
+                        ${mod.examplesText}
+                    </div>
+
+                    <div class="bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-300 mb-2">Guía Práctica</h4>
+                        ${mod.guideText}
+                    </div>
+
+                    <div class="space-y-2 pt-2">
+                        <label class="block text-xs font-semibold text-slate-300">
+                            ✍️ Escribe tu Nota Manuscrita para este Módulo:
+                        </label>
+                        <textarea id="module-input" rows="4" oninput="liveUpdateNote(${mod.id}, this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition leading-relaxed font-mono" placeholder="${mod.placeholder}">${userProgress['note_' + mod.id] || ''}</textarea>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-slate-800">
+                        <button onclick="prevModule()" class="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 rounded-xl transition">
+                            ← Anterior
+                        </button>
+                        <button onclick="toggleComplete(${mod.id})" class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-xs font-bold text-white rounded-xl shadow-lg shadow-amber-900/40 transition flex items-center justify-center gap-2">
+                            <span>${isCompleted ? '↩️ Actualizar Nota' : '💾 ' + mod.actionLabel}</span>
+                        </button>
+                        <button onclick="nextModule()" class="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 rounded-xl transition">
+                            Siguiente →
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function liveUpdateNote(id, text) {
+            userProgress['note_' + id] = text;
+            localStorage.setItem('lms_sims_progress', JSON.stringify(userProgress));
+            updateSingleNoteTexture(id);
+        }
+
+        function toggleComplete(id) {
+            userProgress[id] = !userProgress[id];
+
+            const inputEl = document.getElementById('module-input');
+            if (inputEl) {
+                userProgress['note_' + id] = inputEl.value;
+            }
+
+            localStorage.setItem('lms_sims_progress', JSON.stringify(userProgress));
+            createDeskNoteMeshes();
+            update3DWorkspace();
+            renderModulesList();
+            renderModuleContent();
+
+            showToast(userProgress[id] ? "Nota manuscrita guardada en la mesa 3D" : "Estado actualizado");
+        }
+
+        function updateProgress() {
+            const completedCount = Object.keys(userProgress).filter(k => !k.startsWith('note_') && userProgress[k]).length;
+            const percentage = Math.round((completedCount / modulesData.length) * 100);
+
+            const textEl = document.getElementById('progress-text');
+            const barEl = document.getElementById('progress-bar');
+
+            if (textEl) textEl.innerText = `Progreso: ${percentage}% (${completedCount}/${modulesData.length} Módulos)`;
+            if (barEl) barEl.style.width = `${percentage}%`;
+        }
+
+        function nextModule() {
+            if (currentModuleIndex < modulesData.length - 1) {
+                currentModuleIndex++;
+                renderModulesList();
+                renderModuleContent();
+            }
+        }
+
+        function prevModule() {
+            if (currentModuleIndex > 0) {
+                currentModuleIndex--;
+                renderModulesList();
+                renderModuleContent();
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            if (!toast || !toastMsg) return;
+            toastMsg.innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function resetAllProgress() {
+            if (confirm("¿Reiniciar todo tu progreso y notas manuscritas?")) {
+                userProgress = {};
+                localStorage.removeItem('lms_sims_progress');
+                currentModuleIndex = 0;
+                createDeskNoteMeshes();
+                renderModulesList();
+                renderModuleContent();
+                update3DWorkspace();
+                showToast("Progreso reiniciado correctamente");
+            }
+        }
+
+        function openBookModal() {
+            document.getElementById('book-modal').classList.remove('hidden');
+            currentBookPage = 0;
+            renderBookPage();
+        }
+
+        function closeBookModal() {
+            document.getElementById('book-modal').classList.add('hidden');
+        }
+
+        function turnPage(delta) {
+            const newPage = currentBookPage + delta;
+            if (newPage >= 0 && newPage < modulesData.length) {
+                currentBookPage = newPage;
+                renderBookPage();
+            }
+        }
+
+        function renderBookPage() {
+            const container = document.getElementById('book-pages-container');
+            const mod = modulesData[currentBookPage];
+            const userNote = userProgress['note_' + mod.id] || "<em>Sin nota manuscrita registrada.</em>";
+
+            document.getElementById('page-indicator').innerText = `Página ${currentBookPage + 1} de ${modulesData.length}`;
+
+            container.innerHTML = `
+                <div class="max-w-2xl mx-auto space-y-6">
+                    <div class="text-center pb-4 border-b border-amber-500/20">
+                        <span class="text-xs uppercase tracking-widest text-amber-400 font-mono">Página ${mod.id} — Nota Compilada</span>
+                        <h2 class="text-2xl font-serif font-bold text-amber-100 mt-1">${mod.title}</h2>
+                        <p class="text-xs text-slate-400">${mod.subtitle}</p>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
+                        <h4 class="text-xs uppercase font-bold text-amber-400 flex items-center gap-2">
+                            <span>✍️</span> Nota Manuscrita del Autor:
+                        </h4>
+                        <div class="text-xs font-mono text-slate-200 bg-slate-950 p-4 rounded-xl border border-slate-800 whitespace-pre-wrap leading-relaxed">
+${userNote}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function printBook() {
+            window.print();
+        }
+
+        function exportMarkdown() {
+            let mdContent = `# MANUSCRITO PUBLICADO\n## Taller de Arquitectura Narrativa\n\n`;
+            modulesData.forEach(mod => {
+                mdContent += `### ${mod.title}\n`;
+                mdContent += `**Nota Manuscrita:**\n${userProgress['note_' + mod.id] || 'Sin nota.'}\n\n---\n\n`;
+            });
+
+            const blob = new Blob([mdContent], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Manuscrito_Compilado_Sims.md';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        window.onload = function() {
+            init3D();
+            renderModulesList();
+            renderModuleContent();
+        };
+    </script>
+</body>
+</html>
