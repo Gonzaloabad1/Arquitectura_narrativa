@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taller de Arquitectura Narrativa - LMS Interactivo 3D</title>
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Three.js -->
+    <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         tailwind.config = {
@@ -52,14 +52,13 @@
     <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex justify-between items-center shadow-lg">
         <div class="flex items-center gap-3">
             <div class="p-2 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-400 flex items-center justify-center">
-                <!-- Icono Plumbob Verde Sim -->
                 <svg class="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2L4 12l8 10 8-10L12 2z"/>
                 </svg>
             </div>
             <div>
                 <h1 class="text-lg font-extrabold bg-gradient-to-r from-white via-emerald-200 to-purple-400 bg-clip-text text-transparent">Taller de Arquitectura Narrativa</h1>
-                <p class="text-xs text-slate-400 hidden sm:block"> Estudio Narración &bull; Tutor Virtual & Mesa de Notas Manuscritas 3D</p>
+                <p class="text-xs text-slate-400 hidden sm:block">Sims Studio Edition &bull; Tutor Virtual & Mesa de Notas Manuscritas 3D</p>
             </div>
         </div>
 
@@ -85,18 +84,18 @@
         <!-- Columna Izquierda: Escena 3D & Lista de Módulos -->
         <aside class="lg:col-span-5 xl:col-span-4 flex flex-col gap-4">
             
-            <!-- Visor 3D: El Estudio  del Autor -->
+            <!-- Visor 3D: El Estudio Sims del Autor -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl relative overflow-hidden flex flex-col items-center">
                 <div class="w-full flex justify-between items-center mb-3">
                     <div class="flex items-center gap-2">
                         <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300">Estudio  del Autor</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300">Estudio Sims del Autor</h3>
                     </div>
                     <span id="status-3d" class="text-[10px] px-2.5 py-1 bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 rounded-full font-medium">Escritorio en Blanco</span>
                 </div>
                 
                 <!-- Canvas Three.js Centrado -->
-                <div id="canvas-container" class="w-full h-80 sm:h-96 bg-slate-950 rounded-xl overflow-hidden relative cursor-grab active:cursor-grabbing border border-slate-800/80 shadow-inner flex items-center justify-center">
+                <div id="canvas-container" class="w-full h-80 sm:h-96 min-h-[320px] bg-slate-950 rounded-xl overflow-hidden relative cursor-grab active:cursor-grabbing border border-slate-800/80 shadow-inner flex items-center justify-center">
                     <div class="absolute bottom-2 left-2 z-10 text-[10px] text-slate-300 bg-slate-900/90 px-2.5 py-1 rounded-lg backdrop-blur border border-slate-800 flex items-center gap-1.5 shadow">
                         <span>🎮</span> Clic en el libro para abrir/cerrar &bull; Arrastra para girar
                     </div>
@@ -382,7 +381,6 @@
         let userProgress = JSON.parse(localStorage.getItem('lms_sims_progress')) || {};
         let currentBookPage = 0;
 
-        // Variables de Three.js & Personaje Sims
         let scene, camera, renderer, container;
         let simsCharacterGroup, plumbobMesh, deskGroup;
         let noteMeshes = [], noteTextures = [];
@@ -405,7 +403,7 @@
 
         function createPageCanvasTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 1536; // Alta resolución mejorada
+            canvas.width = 1536;
             canvas.height = 2048;
             const ctx = canvas.getContext('2d');
             const texture = new THREE.CanvasTexture(canvas);
@@ -460,7 +458,7 @@
                 ctx.fillText("Nota Manuscrita del Autor:", 110, 420);
 
                 ctx.fillStyle = '#1e293b';
-                ctx.font = '42px Georgia, serif'; // Letra grande y perfectamente legible
+                ctx.font = '42px Georgia, serif';
                 const words = note.split(' ');
                 let line = '';
                 let y = 520;
@@ -492,7 +490,6 @@
             }
         }
 
-        // Crear Personaje 'Sim' 3D con Diamante Plumbob Verde
         function createSimsCharacter() {
             simsCharacterGroup = new THREE.Group();
 
@@ -538,7 +535,6 @@
             scene.add(simsCharacterGroup);
         }
 
-        // Crear Notas Manuscritas Individuales en la Mesa
         function createDeskNoteMeshes() {
             noteMeshes.forEach(mesh => deskGroup.remove(mesh));
             noteMeshes = [];
@@ -630,7 +626,6 @@
             }
         }
 
-        // Generar Textura Realista de Portada de Libro
         function createBookCoverTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
@@ -684,7 +679,6 @@
             return texture;
         }
 
-        // Crear Modelo 3D del Libro con Tapa Dura, Páginas y Lomo
         function create3DHardcoverBook() {
             final3DBookGroup = new THREE.Group();
             final3DBookGroup.position.set(0, 0.86, 0.05);
@@ -736,7 +730,7 @@
         function toggle3DBookOpen() {
             isBookOpen3D = !isBookOpen3D;
             if (isBookOpen3D) {
-                current3DBookPageIndex = 0; // Iniciar en la primera página al abrir
+                current3DBookPageIndex = 0;
                 targetCamPos = { x: 0, y: 1.85, z: 1.25 };
                 targetCamLookAt = { x: 0, y: 0.9, z: 0.1 };
 
@@ -754,7 +748,6 @@
 
         function flip3DPage(delta) {
             const newIndex = current3DBookPageIndex + (delta * 2);
-            // Si pasamos de la última página, cerrar automáticamente el libro y mostrar portada
             if (newIndex >= modulesData.length) {
                 isBookOpen3D = false;
                 targetCamPos = { x: 0, y: 3.2, z: 4.2 };
@@ -769,6 +762,15 @@
             }
         }
 
+        function handleResize() {
+            if (!container || !renderer || !camera) return;
+            const width = container.clientWidth || 320;
+            const height = container.clientHeight || 320;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
         function init3D() {
             container = document.getElementById('canvas-container');
             if (!container) return;
@@ -776,12 +778,15 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x020617);
 
-            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            const width = container.clientWidth || 320;
+            const height = container.clientHeight || 320;
+
+            camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
             camera.position.set(targetCamPos.x, targetCamPos.y, targetCamPos.z);
             camera.lookAt(currentCamLookAt.x, currentCamLookAt.y, currentCamLookAt.z);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setSize(width, height);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
             container.appendChild(renderer.domElement);
@@ -796,14 +801,12 @@
             deskLight.position.set(0, 2.0, 0.3);
             scene.add(deskLight);
 
-            // Suelo
             const floorGeo = new THREE.PlaneGeometry(8, 8);
             const floorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
             const floorMesh = new THREE.Mesh(floorGeo, floorMat);
             floorMesh.rotation.x = -Math.PI / 2;
             scene.add(floorMesh);
 
-            // Mesa de Trabajo
             deskGroup = new THREE.Group();
             const deskTopGeo = new THREE.BoxGeometry(2.2, 0.08, 1.2);
             const deskMat = new THREE.MeshStandardMaterial({ color: 0x331e11, roughness: 0.4 });
@@ -824,7 +827,6 @@
             createDeskNoteMeshes();
             create3DHardcoverBook();
 
-            // Interacción de rotación y clic en libro
             container.addEventListener('mousedown', (e) => {
                 isDragging = true;
                 dragDistance = 0;
@@ -866,15 +868,15 @@
                 }
             });
 
+            // Soporte universal para redimensionar en Vercel e IFrames
+            if (window.ResizeObserver) {
+                const ro = new ResizeObserver(() => handleResize());
+                ro.observe(container);
+            }
+            window.addEventListener('resize', handleResize);
+
             update3DWorkspace();
             animate3D();
-
-            window.addEventListener('resize', () => {
-                if (!container) return;
-                camera.aspect = container.clientWidth / container.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(container.clientWidth, container.clientHeight);
-            });
         }
 
         function update3DWorkspace() {
