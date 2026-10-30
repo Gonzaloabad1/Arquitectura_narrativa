@@ -89,7 +89,7 @@
                 <div class="w-full flex justify-between items-center mb-3">
                     <div class="flex items-center gap-2">
                         <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300">Estudio  del Autor</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300">Estudio del Autor</h3>
                     </div>
                     <span id="status-3d" class="text-[10px] px-2.5 py-1 bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 rounded-full font-medium">Escritorio en Blanco</span>
                 </div>
@@ -839,13 +839,13 @@
                     const deltaY = e.clientY - previousMousePosition.y;
                     dragDistance += Math.abs(deltaX) + Math.abs(deltaY);
 
-                    // Rotación horizontal (Y-axis)
+                    // Rotación horizontal (Eje Y)
                     scene.rotation.y += deltaX * 0.005;
 
-                    // Rotación vertical (X-axis) con límites para no volcar la escena
+                    // Rotación vertical (Eje X) con topes para evitar inversión de la escena
                     const nextRotationX = scene.rotation.x + deltaY * 0.005;
-                    const maxPitch = Math.PI / 3;  // Limit 60 degrees down
-                    const minPitch = -Math.PI / 12; // Limit 15 degrees up
+                    const maxPitch = Math.PI / 3;  
+                    const minPitch = -Math.PI / 12; 
                     scene.rotation.x = Math.max(minPitch, Math.min(maxPitch, nextRotationX));
 
                     previousMousePosition = { x: e.clientX, y: e.clientY };
@@ -878,7 +878,6 @@
                 }
             });
 
-            // Soporte universal para redimensionar en Vercel e IFrames
             if (window.ResizeObserver) {
                 const ro = new ResizeObserver(() => handleResize());
                 ro.observe(container);
