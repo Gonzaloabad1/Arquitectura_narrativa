@@ -89,7 +89,7 @@
                 <div class="w-full flex justify-between items-center mb-3">
                     <div class="flex items-center gap-2">
                         <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300">Estudio Sims del Autor</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300">Estudio  del Autor</h3>
                     </div>
                     <span id="status-3d" class="text-[10px] px-2.5 py-1 bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 rounded-full font-medium">Escritorio en Blanco</span>
                 </div>
@@ -97,7 +97,7 @@
                 <!-- Canvas Three.js Centrado -->
                 <div id="canvas-container" class="w-full h-80 sm:h-96 min-h-[320px] bg-slate-950 rounded-xl overflow-hidden relative cursor-grab active:cursor-grabbing border border-slate-800/80 shadow-inner flex items-center justify-center">
                     <div class="absolute bottom-2 left-2 z-10 text-[10px] text-slate-300 bg-slate-900/90 px-2.5 py-1 rounded-lg backdrop-blur border border-slate-800 flex items-center gap-1.5 shadow">
-                        <span>🎮</span> Clic en el libro para abrir/cerrar &bull; Arrastra para girar
+                        <span>🎮</span> Clic en el libro para abrir/cerrar &bull; Arrastra en cualquier dirección para girar
                     </div>
                 </div>
                 
@@ -836,8 +836,18 @@
             container.addEventListener('mousemove', (e) => {
                 if (isDragging) {
                     const deltaX = e.clientX - previousMousePosition.x;
-                    dragDistance += Math.abs(deltaX);
+                    const deltaY = e.clientY - previousMousePosition.y;
+                    dragDistance += Math.abs(deltaX) + Math.abs(deltaY);
+
+                    // Rotación horizontal (Y-axis)
                     scene.rotation.y += deltaX * 0.005;
+
+                    // Rotación vertical (X-axis) con límites para no volcar la escena
+                    const nextRotationX = scene.rotation.x + deltaY * 0.005;
+                    const maxPitch = Math.PI / 3;  // Limit 60 degrees down
+                    const minPitch = -Math.PI / 12; // Limit 15 degrees up
+                    scene.rotation.x = Math.max(minPitch, Math.min(maxPitch, nextRotationX));
+
                     previousMousePosition = { x: e.clientX, y: e.clientY };
                 }
             });
