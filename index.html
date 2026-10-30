@@ -82,7 +82,7 @@
     <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
         <!-- Columna Izquierda: Escena 3D & Lista de Módulos -->
-        <aside class="lg:col-span-5 xl:col-span-4 flex flex-col gap-4">
+        <aside id="left-sidebar" class="lg:col-span-5 xl:col-span-4 flex flex-col gap-4 transition-all duration-500">
             
             <!-- Visor 3D: El Estudio Sims del Autor -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl relative overflow-hidden flex flex-col items-center">
@@ -91,13 +91,18 @@
                         <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300">Estudio del Autor</h3>
                     </div>
-                    <span id="status-3d" class="text-[10px] px-2.5 py-1 bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 rounded-full font-medium">Escritorio en Blanco</span>
+                    <div class="flex items-center gap-2">
+                        <button id="toggle-fullscreen-3d" onclick="toggleFullStudio3D()" class="hidden text-[10px] px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-full font-bold transition">
+                            👁️ Alternar Vista Completa
+                        </button>
+                        <span id="status-3d" class="text-[10px] px-2.5 py-1 bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 rounded-full font-medium">Escritorio en Blanco</span>
+                    </div>
                 </div>
                 
                 <!-- Canvas Three.js Centrado -->
-                <div id="canvas-container" class="w-full h-80 sm:h-96 min-h-[320px] bg-slate-950 rounded-xl overflow-hidden relative cursor-grab active:cursor-grabbing border border-slate-800/80 shadow-inner flex items-center justify-center">
+                <div id="canvas-container" class="w-full h-80 sm:h-[480px] lg:h-[550px] min-h-[320px] bg-slate-950 rounded-xl overflow-hidden relative cursor-grab active:cursor-grabbing border border-slate-800/80 shadow-inner flex items-center justify-center transition-all duration-500">
                     <div class="absolute bottom-2 left-2 z-10 text-[10px] text-slate-300 bg-slate-900/90 px-2.5 py-1 rounded-lg backdrop-blur border border-slate-800 flex items-center gap-1.5 shadow">
-                        <span>🎮</span> Clic en el libro para abrir/cerrar &bull; Arrastra en cualquier dirección para girar
+                        <span>🎮</span> Clic en libro para abrir &bull; Doble clic pasa página &bull; Arrastra para girar
                     </div>
                 </div>
                 
@@ -106,8 +111,8 @@
                 </p>
             </div>
 
-            <!-- Menú de Módulos -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+            <!-- Menú de Módulos (Se oculta al completar la obra para dar protagonismo total al estudio 3D) -->
+            <div id="modules-menu-box" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl transition-all duration-300">
                 <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 px-1">Módulos del Taller</h2>
                 <nav id="modules-list" class="flex flex-col gap-2">
                     <!-- Renderizado por JS -->
@@ -115,8 +120,8 @@
             </div>
         </aside>
 
-        <!-- Columna Derecha: Contenido del Módulo Activo & Práctica de Escritura -->
-        <section class="lg:col-span-7 xl:col-span-8 flex flex-col gap-6">
+        <!-- Columna Derecha: Contenido del Módulo Activo (Se oculta al completar para ver el libro 3D en grande) -->
+        <section id="right-content-section" class="lg:col-span-7 xl:col-span-8 flex flex-col gap-6 transition-all duration-500">
             <div id="module-content" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-2xl transition-all duration-300">
                 <!-- Inyectado dinámicamente por JS -->
             </div>
@@ -158,11 +163,11 @@
             </div>
 
             <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
-                <button onclick="turnPage(-1)" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-800 transition text-amber-300 font-semibold">
+                <button onclick="turnModalPage(-1)" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-800 transition text-amber-300 font-semibold">
                     ← Página Anterior
                 </button>
-                <span id="page-indicator">Página 1 de 8</span>
-                <button onclick="turnPage(1)" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-800 transition text-amber-300 font-semibold">
+                <span id="modal-page-indicator">Página 1 de 8</span>
+                <button onclick="turnModalPage(1)" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-800 transition text-amber-300 font-semibold">
                     Página Siguiente →
                 </button>
             </div>
@@ -205,9 +210,7 @@
                 title: "2. Investigación y Contexto",
                 subtitle: "Verosimilitud y Documentación de Campo",
                 pillHeader: "Píldora de Maestro: El rigor de Umberto Eco y Agatha Christie",
-                theoryText: `
-                    <p class="mb-3">La credibilidad de una historia radica en el rigor de sus detalles técnicos y de ambientación.</p>
-                `,
+                theoryText: `<p class="mb-3">La credibilidad de una historia radica en el rigor de sus detalles técnicos y de ambientación.</p>`,
                 examplesText: `
                     <ul class="space-y-3 text-xs">
                         <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
@@ -216,11 +219,7 @@
                         </li>
                     </ul>
                 `,
-                guideText: `
-                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
-                        <li>Anota los tres temas clave de contexto que requiere tu historia.</li>
-                    </ol>
-                `,
+                guideText: `<ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300"><li>Anota los tres temas clave de contexto que requiere tu historia.</li></ol>`,
                 type: "input",
                 actionLabel: "Guardar Nota Manuscrita #2",
                 placeholder: "Ej: Consultar normativas de investigación forense y venenos de época..."
@@ -230,9 +229,7 @@
                 title: "3. Creación de Personajes",
                 subtitle: "Deseo vs. Necesidad y Defecto Fatal",
                 pillHeader: "Píldora de Maestro: J.K. Rowling y Gillian Flynn",
-                theoryText: `
-                    <p class="mb-3">Un personaje cobra vida en la tensión entre su <strong>Deseo Externo (Want)</strong> y su <strong>Necesidad Interna (Need)</strong>.</p>
-                `,
+                theoryText: `<p class="mb-3">Un personaje cobra vida en la tensión entre su <strong>Deseo Externo (Want)</strong> y su <strong>Necesidad Interna (Need)</strong>.</p>`,
                 examplesText: `
                     <ul class="space-y-3 text-xs">
                         <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
@@ -241,11 +238,7 @@
                         </li>
                     </ul>
                 `,
-                guideText: `
-                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
-                        <li>Diseña el Want y Need de tu protagonista.</li>
-                    </ol>
-                `,
+                guideText: `<ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300"><li>Diseña el Want y Need de tu protagonista.</li></ol>`,
                 type: "input",
                 actionLabel: "Guardar Nota Manuscrita #3",
                 placeholder: "Ej: Elena (Bióloga): Desea descubrir la cura, pero necesita perdonarse su error pasado..."
@@ -255,9 +248,7 @@
                 title: "4. La Estructura y la Escaleta",
                 subtitle: "Estructura en 3 Actos y Puntos de Giro",
                 pillHeader: "Píldora de Maestro: El método de Brandon Sanderson",
-                theoryText: `
-                    <p class="mb-3">Planifica el ritmo: Planteamiento (25%), Nudo y Confrontación (50%) y Desenlace (25%).</p>
-                `,
+                theoryText: `<p class="mb-3">Planifica el ritmo: Planteamiento (25%), Nudo y Confrontación (50%) y Desenlace (25%).</p>`,
                 examplesText: `
                     <ul class="space-y-3 text-xs">
                         <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
@@ -266,11 +257,7 @@
                         </li>
                     </ul>
                 `,
-                guideText: `
-                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
-                        <li>Detalla los 3 puntos de giro clave.</li>
-                    </ol>
-                `,
+                guideText: `<ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300"><li>Detalla los 3 puntos de giro clave.</li></ol>`,
                 type: "input",
                 actionLabel: "Guardar Nota Manuscrita #4",
                 placeholder: "Ej: Acto 1: Robo en la galería. Acto 2: Traición del socio. Acto 3: Juicio..."
@@ -280,9 +267,7 @@
                 title: "5. La Escritura del Borrador",
                 subtitle: "Silenciar al Crítico Interno y la Teoría del Iceberg",
                 pillHeader: "Píldora de Maestro: Hemingway y King",
-                theoryText: `
-                    <p class="mb-3">Avanza en el primer borrador sin corregir sobre la marcha. Escribe con la puerta cerrada.</p>
-                `,
+                theoryText: `<p class="mb-3">Avanza en el primer borrador sin corregir sobre la marcha. Escribe con la puerta cerrada.</p>`,
                 examplesText: `
                     <ul class="space-y-3 text-xs">
                         <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
@@ -291,11 +276,7 @@
                         </li>
                     </ul>
                 `,
-                guideText: `
-                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
-                        <li>Fija una meta diaria de palabras.</li>
-                    </ol>
-                `,
+                guideText: `<ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300"><li>Fija una meta diaria de palabras.</li></ol>`,
                 type: "input",
                 actionLabel: "Guardar Nota Manuscrita #5",
                 placeholder: "Ej: Meta diaria: 800 palabras. Avance actual del capítulo 1 y 2..."
@@ -305,9 +286,7 @@
                 title: "6. Primera Revisión y Edición",
                 subtitle: "Edición de Desarrollo y Pulido de Estilo",
                 pillHeader: "Píldora de Maestro: Raymond Carver y la tijera de edición",
-                theoryText: `
-                    <p class="mb-3">Deja descansar el texto unas semanas y luego elimina todo lo superfluo.</p>
-                `,
+                theoryText: `<p class="mb-3">Deja descansar el texto unas semanas y luego elimina todo lo superfluo.</p>`,
                 examplesText: `
                     <ul class="space-y-3 text-xs">
                         <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
@@ -316,11 +295,7 @@
                         </li>
                     </ul>
                 `,
-                guideText: `
-                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
-                        <li>Lee diálogos en voz alta.</li>
-                    </ol>
-                `,
+                guideText: `<ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300"><li>Lee diálogos en voz alta.</li></ol>`,
                 type: "input",
                 actionLabel: "Guardar Nota Manuscrita #6",
                 placeholder: "Ej: Eliminados adjetivos innecesarios y pulida la escena del interrogatorio..."
@@ -330,9 +305,7 @@
                 title: "7. Lectores Cero y Corrección",
                 subtitle: "Feedback Estructurado y Pulido Profesional",
                 pillHeader: "Píldora de Maestro: Cuestionarios objetivos para lectores beta",
-                theoryText: `
-                    <p class="mb-3">Recoge opiniones sinceras para detectar baches de ritmo.</p>
-                `,
+                theoryText: `<p class="mb-3">Recoge opiniones sinceras para detectar baches de ritmo.</p>`,
                 examplesText: `
                     <ul class="space-y-3 text-xs">
                         <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
@@ -341,11 +314,7 @@
                         </li>
                     </ul>
                 `,
-                guideText: `
-                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
-                        <li>Envía la obra a 3 lectores de confianza.</li>
-                    </ol>
-                `,
+                guideText: `<ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300"><li>Envía la obra a 3 lectores de confianza.</li></ol>`,
                 type: "input",
                 actionLabel: "Guardar Nota Manuscrita #7",
                 placeholder: "Ej: Feedback recibido: Acelerar el inicio del capítulo 4..."
@@ -355,9 +324,7 @@
                 title: "8. Publicación o Difusión",
                 subtitle: "Edición Tradicional o Autoedición",
                 pillHeader: "Píldora de Maestro: Lanzamiento e impacto",
-                theoryText: `
-                    <p class="mb-3">Prepara tu propuesta editorial o estrategia de autoedición digital.</p>
-                `,
+                theoryText: `<p class="mb-3">Prepara tu propuesta editorial o estrategia de autoedición digital.</p>`,
                 examplesText: `
                     <ul class="space-y-3 text-xs">
                         <li class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
@@ -366,11 +333,7 @@
                         </li>
                     </ul>
                 `,
-                guideText: `
-                    <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300">
-                        <li>Diseña tu pitch de 1 línea.</li>
-                    </ol>
-                `,
+                guideText: `<ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-300"><li>Diseña tu pitch de 1 línea.</li></ol>`,
                 type: "input",
                 actionLabel: "Guardar Nota Manuscrita #8",
                 placeholder: "Ej: Sinopsis lista. Preparada propuesta para editoriales..."
@@ -400,6 +363,7 @@
         let isSimsWalking = false;
 
         let isDragging = false, dragDistance = 0, previousMousePosition = { x: 0, y: 0 };
+        let isFullStudioMode = false;
 
         function createPageCanvasTexture() {
             const canvas = document.createElement('canvas');
@@ -440,52 +404,52 @@
 
                 ctx.fillStyle = '#78350f';
                 ctx.font = 'bold 72px serif';
-                ctx.fillText(`MÓDULO ${mod.id}`, 110, 180);
+                ctx.fillText(`MÓDULO ${mod.id}`, 100, 170);
 
-                ctx.fillStyle = '#0f172a';
-                ctx.font = 'bold 56px sans-serif';
-                ctx.fillText(mod.title.substring(0, 36), 110, 275);
+                ctx.fillStyle = '#020617';
+                ctx.font = 'bold 54px sans-serif';
+                ctx.fillText(mod.title.substring(0, 32), 100, 250);
 
                 ctx.strokeStyle = '#d97706';
                 ctx.lineWidth = 6;
                 ctx.beginPath();
-                ctx.moveTo(110, 320);
-                ctx.lineTo(1426, 320);
+                ctx.moveTo(100, 290);
+                ctx.lineTo(1436, 290);
                 ctx.stroke();
 
                 ctx.fillStyle = '#b45309';
-                ctx.font = 'italic 48px Georgia, serif';
-                ctx.fillText("Nota Manuscrita del Autor:", 110, 420);
+                ctx.font = 'bold italic 46px Georgia, serif';
+                ctx.fillText("Nota Manuscrita del Autor:", 100, 370);
 
-                ctx.fillStyle = '#1e293b';
-                ctx.font = '42px Georgia, serif';
+                ctx.fillStyle = '#020617';
+                ctx.font = 'bold 44px Georgia, serif';
                 const words = note.split(' ');
                 let line = '';
-                let y = 520;
-                const maxWidth = 1300;
+                let y = 450;
+                const maxWidth = 1330;
 
                 for (let n = 0; n < words.length; n++) {
                     const testLine = line + words[n] + ' ';
                     if (ctx.measureText(testLine).width > maxWidth && n > 0) {
-                        ctx.fillText(line, 110, y);
+                        ctx.fillText(line, 100, y);
                         line = words[n] + ' ';
-                        y += 68;
+                        y += 65;
                         if (y > 1800) break;
                     } else {
                         line = testLine;
                     }
                 }
-                ctx.fillText(line, 110, y);
+                ctx.fillText(line, 100, y);
 
                 ctx.fillStyle = '#b45309';
                 ctx.font = 'bold 40px sans-serif';
-                ctx.fillText(`Página ${modIdx + 1} de ${modulesData.length}`, 620, 1940);
+                ctx.fillText(`Página ${modIdx + 1} de ${modulesData.length}`, 600, 1930);
             } else {
                 ctx.textAlign = 'center';
                 ctx.fillStyle = '#78350f';
-                ctx.font = 'bold 72px serif';
+                ctx.font = 'bold 76px serif';
                 ctx.fillText("FIN DEL MANUSCRITO", 768, 920);
-                ctx.font = 'italic 48px serif';
+                ctx.font = 'italic 52px serif';
                 ctx.fillText("¡Enhorabuena por completar tu obra!", 768, 1030);
             }
         }
@@ -638,8 +602,6 @@
             ctx.strokeStyle = '#fbbf24';
             ctx.lineWidth = 14;
             ctx.strokeRect(40, 40, 944, 1280);
-            ctx.lineWidth = 4;
-            ctx.strokeRect(60, 60, 904, 1240);
 
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 64px serif';
@@ -731,29 +693,25 @@
             isBookOpen3D = !isBookOpen3D;
             if (isBookOpen3D) {
                 current3DBookPageIndex = 0;
-                targetCamPos = { x: 0, y: 1.85, z: 1.25 };
-                targetCamLookAt = { x: 0, y: 0.9, z: 0.1 };
+                targetCamPos = { x: 0, y: 1.8, z: 0.65 };
+                targetCamLookAt = { x: 0, y: 0.86, z: 0.05 };
 
                 bookPagesInternalGroup.visible = true;
                 update3DPageTextures();
-                showToast("Libro abierto: mostrando páginas manuscritas");
+                showToast("Libro abierto en la animación 3D: haz clic en los lados para pasar páginas");
             } else {
                 targetCamPos = { x: 0, y: 3.2, z: 4.2 };
                 targetCamLookAt = { x: 0, y: 0.5, z: 0 };
 
                 bookPagesInternalGroup.visible = false;
-                showToast("Libro cerrado: mostrando portada");
+                showToast("Libro cerrado en la mesa");
             }
         }
 
         function flip3DPage(delta) {
             const newIndex = current3DBookPageIndex + (delta * 2);
             if (newIndex >= modulesData.length) {
-                isBookOpen3D = false;
-                targetCamPos = { x: 0, y: 3.2, z: 4.2 };
-                targetCamLookAt = { x: 0, y: 0.5, z: 0 };
-                bookPagesInternalGroup.visible = false;
-                showToast("Fin del libro: libro cerrado y portada mostrada");
+                openBookModal();
                 return;
             }
             if (newIndex >= 0) {
@@ -839,10 +797,8 @@
                     const deltaY = e.clientY - previousMousePosition.y;
                     dragDistance += Math.abs(deltaX) + Math.abs(deltaY);
 
-                    // Rotación horizontal (Eje Y)
                     scene.rotation.y += deltaX * 0.005;
 
-                    // Rotación vertical (Eje X) con topes para evitar inversión de la escena
                     const nextRotationX = scene.rotation.x + deltaY * 0.005;
                     const maxPitch = Math.PI / 3;  
                     const minPitch = -Math.PI / 12; 
@@ -866,9 +822,9 @@
                         if (!isBookOpen3D) {
                             toggle3DBookOpen();
                         } else {
-                            if (hitPoint.x > 0.1) {
+                            if (hitPoint.x > 0.05) {
                                 flip3DPage(1);
-                            } else if (hitPoint.x < -0.1) {
+                            } else if (hitPoint.x < -0.05) {
                                 flip3DPage(-1);
                             } else {
                                 toggle3DBookOpen();
@@ -897,15 +853,40 @@
                 updateSingleNoteTexture(modulesData[idx].id);
             });
 
+            const leftSidebar = document.getElementById('left-sidebar');
+            const rightContentSection = document.getElementById('right-content-section');
+            const modulesMenuBox = document.getElementById('modules-menu-box');
+            const toggleBtn = document.getElementById('toggle-fullscreen-3d');
+            const canvasContainer = document.getElementById('canvas-container');
+
             if (completedCount === modulesData.length) {
                 noteMeshes.forEach(mesh => mesh.visible = false);
                 if (final3DBookGroup) {
                     final3DBookGroup.visible = true;
                 }
-                document.getElementById('status-3d').innerText = "📖 ¡Libro Creado en la Mesa! Clic para Abrir/Cerrar";
-                document.getElementById('author-state-desc').innerText = "¡Tus notas manuscritas forman ahora el libro publicado! Haz clic en el libro 3D para acercar la imagen y abrir sus páginas.";
+                
+                // Ocultar el panel del LMS de la derecha y expandir el estudio 3D a pantalla completa
+                rightContentSection.classList.add('hidden');
+                modulesMenuBox.classList.add('hidden');
+                leftSidebar.className = "lg:col-span-12 flex flex-col gap-4 transition-all duration-500";
+                canvasContainer.className = "w-full h-[75vh] min-h-[500px] bg-slate-950 rounded-xl overflow-hidden relative cursor-grab active:cursor-grabbing border border-slate-800/80 shadow-inner flex items-center justify-center transition-all duration-500";
+                
+                toggleBtn.classList.remove('hidden');
+
+                document.getElementById('status-3d').innerText = "📖 ¡Libro Creado en Pantalla Completa!";
+                document.getElementById('author-state-desc').innerText = "¡Tu obra está completa! Gira el estudio 3D, haz clic en el libro para abrirlo y haz clic en sus páginas para leer tu contenido paso a paso.";
                 document.getElementById('book-modal-btn').classList.remove('hidden');
+                
+                // Redimensionar el canvas 3D
+                setTimeout(() => handleResize(), 100);
             } else {
+                rightContentSection.classList.remove('hidden');
+                modulesMenuBox.classList.remove('hidden');
+                leftSidebar.className = "lg:col-span-5 xl:col-span-4 flex flex-col gap-4 transition-all duration-500";
+                canvasContainer.className = "w-full h-80 sm:h-96 min-h-[320px] bg-slate-950 rounded-xl overflow-hidden relative cursor-grab active:cursor-grabbing border border-slate-800/80 shadow-inner flex items-center justify-center transition-all duration-500";
+                
+                toggleBtn.classList.add('hidden');
+
                 if (final3DBookGroup) {
                     final3DBookGroup.visible = false;
                     isBookOpen3D = false;
@@ -916,7 +897,30 @@
                 document.getElementById('book-modal-btn').classList.add('hidden');
                 document.getElementById('status-3d').innerText = `Notas Manuscritas (${completedCount}/8)`;
                 document.getElementById('author-state-desc').innerText = "Tu personaje Sim camina y escribe en el escritorio conforme completas cada módulo.";
+                
+                setTimeout(() => handleResize(), 100);
             }
+        }
+
+        function toggleFullStudio3D() {
+            isFullStudioMode = !isFullStudioMode;
+            const rightContentSection = document.getElementById('right-content-section');
+            const modulesMenuBox = document.getElementById('modules-menu-box');
+            const leftSidebar = document.getElementById('left-sidebar');
+            const canvasContainer = document.getElementById('canvas-container');
+
+            if (isFullStudioMode) {
+                rightContentSection.classList.add('hidden');
+                modulesMenuBox.classList.add('hidden');
+                leftSidebar.className = "lg:col-span-12 flex flex-col gap-4 transition-all duration-500";
+                canvasContainer.className = "w-full h-[75vh] min-h-[500px] bg-slate-950 rounded-xl overflow-hidden relative cursor-grab active:cursor-grabbing border border-slate-800/80 shadow-inner flex items-center justify-center transition-all duration-500";
+            } else {
+                rightContentSection.classList.remove('hidden');
+                modulesMenuBox.classList.remove('hidden');
+                leftSidebar.className = "lg:col-span-5 xl:col-span-4 flex flex-col gap-4 transition-all duration-500";
+                canvasContainer.className = "w-full h-80 sm:h-96 min-h-[320px] bg-slate-950 rounded-xl overflow-hidden relative cursor-grab active:cursor-grabbing border border-slate-800/80 shadow-inner flex items-center justify-center transition-all duration-500";
+            }
+            setTimeout(() => handleResize(), 100);
         }
 
         function animate3D() {
@@ -1065,6 +1069,9 @@
             userProgress['note_' + id] = text;
             localStorage.setItem('lms_sims_progress', JSON.stringify(userProgress));
             updateSingleNoteTexture(id);
+            if (isBookOpen3D) {
+                update3DPageTextures();
+            }
         }
 
         function toggleComplete(id) {
@@ -1127,6 +1134,7 @@
                 userProgress = {};
                 localStorage.removeItem('lms_sims_progress');
                 currentModuleIndex = 0;
+                isFullStudioMode = false;
                 createDeskNoteMeshes();
                 renderModulesList();
                 renderModuleContent();
@@ -1138,27 +1146,27 @@
         function openBookModal() {
             document.getElementById('book-modal').classList.remove('hidden');
             currentBookPage = 0;
-            renderBookPage();
+            renderBookModalPage();
         }
 
         function closeBookModal() {
             document.getElementById('book-modal').classList.add('hidden');
         }
 
-        function turnPage(delta) {
+        function turnModalPage(delta) {
             const newPage = currentBookPage + delta;
             if (newPage >= 0 && newPage < modulesData.length) {
                 currentBookPage = newPage;
-                renderBookPage();
+                renderBookModalPage();
             }
         }
 
-        function renderBookPage() {
+        function renderBookModalPage() {
             const container = document.getElementById('book-pages-container');
             const mod = modulesData[currentBookPage];
             const userNote = userProgress['note_' + mod.id] || "<em>Sin nota manuscrita registrada.</em>";
 
-            document.getElementById('page-indicator').innerText = `Página ${currentBookPage + 1} de ${modulesData.length}`;
+            document.getElementById('modal-page-indicator').innerText = `Página ${currentBookPage + 1} de ${modulesData.length}`;
 
             container.innerHTML = `
                 <div class="max-w-2xl mx-auto space-y-6">
